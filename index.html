@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Autos Favoritos - FakeAPI</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1rem 0;
+      background: #fff;
+      max-width: 300px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .card-body {
+      padding: 0.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: #111;
+    }
+
+    #lista-favoritos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="usuario-content"></div>
+
+  <h2 style="text-align:center; margin-top: 3rem;">Autos Favoritos</h2>
+  <div id="lista-favoritos"></div>
+
+  <script>
+    // SIMULACIÓN: obtener datos desde FakeAPI (reemplázalo por tu fetch real si tienes acceso a la API)
+    async function obtenerListaAutosFakeAPI() {
+      const res = await fetch('https://myfakeapi.com/api/cars/');
+      const data = await res.json();
+      return data.cars;
+    }
+
+    // SIMULACIÓN: imagen desde Pixabay o URL aleatoria
+    async function obtenerImagenPixabay(auto) {
+      return `https://source.unsplash.com/400x300/?car,${auto.car}`;
+    }
+
+    function eliminarDeFavoritos(id) {
+      let favoritos = JSON.parse(localStorage.getItem('autosFavoritos')) || [];
+      favoritos = favoritos.filter(fid => fid !== id);
+      localStorage.setItem('autosFavoritos', JSON.stringify(favoritos));
+      cargarFavoritos(); // Recargar vista
+    }
+
+    async function cargarFavoritos() {
+      const listaFavoritosElement = document.getElementById('lista-favoritos');
+      listaFavoritosElement.innerHTML = '';
+
+      const favoritos = localStorage.getItem('autosFavoritos');
+      if (favoritos) {
+        const arrayFavoritos = JSON.parse(favoritos).map(Number);
+        if (arrayFavoritos.length > 0) {
+          const autos = await obtenerListaAutosFakeAPI();
+          const favoritosFiltrados = autos.filter(auto => arrayFavoritos.includes(Number(auto.id)));
+
+          if (favoritosFiltrados.length === 0) {
+            listaFavoritosElement.innerHTML = '<p>No se encontraron autos favoritos.</p>';
+            return;
+          }
+
+          for (const auto of favoritosFiltrados) {
+            const imageUrl = await obtenerImagenPixabay(auto);
+            const item = document.createElement('div');
+            item.className = 'card';
+            item.innerHTML = `
+              <img src="${imageUrl}" alt="${auto.car}">
+              <div class="card-body">
+                <h3 class="card-title">${auto.car}</h3>
+                <p>Modelo: ${auto.car_model}</p>
+                <p>Año: ${auto.car_model_year}</p>
+                <button onclick="eliminarDeFavoritos(${auto.id})">🗑️ Eliminar de Favoritos</button>
+              </div>
+            `;
+            listaFavoritosElement.appendChild(item);
+          }
+        } else {
+          listaFavoritosElement.innerHTML = '<p>No tienes autos favoritos.</p>';
+        }
+      } else {
+        listaFavoritosElement.innerHTML = '<p>No hay favoritos guardados.</p>';
+      }
+    }
+
+    function mostrarUsuario() {
+      const div = document.getElementById('usuario-content');
+      div.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <h1 style="font-size: 2rem; color: #111;">FAKE API</h1>
+          <p style="margin-top: -10px; font-size: 1.1rem; color: #555;">Andres Ceballos</p>
+          <img src="af6ff7ad-4355-4682-8871-09e79d2f94f0.png" alt="API Image" style="max-width: 250px; margin: 1rem auto; display: block; border-radius: 12px;">
+          <p style="font-size: 1.1rem; background: #e0f2fe; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block;">
+            API con información de autos
+          </p>
+          <p style="margin-top: 1rem;">
+            <a href="https://andres2172.github.io/apiFake/" target="_blank" style="text-decoration: none; color: #2563eb;">
+              andres2172.github.io/apiFake/
+            </a>
+          </p>
+          <p style="font-size: 0.9rem; color: #888;">v 1.0.0</p>
+        </div>
+      `;
+    }
+
+    // Inicialización
+    mostrarUsuario();
+    cargarFavoritos();
+  </script>
+</body>
+</html>
